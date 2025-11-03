@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ProductService
+    name: Product-Service
 
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:3306/productdb
@@ -12,7 +12,14 @@ spring:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
       ddl-auto: update
-
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      defaultZone: ${EUREKA_SERVER_ADDRESS:http://localhost:8761/eureka}
 
 
 server:
