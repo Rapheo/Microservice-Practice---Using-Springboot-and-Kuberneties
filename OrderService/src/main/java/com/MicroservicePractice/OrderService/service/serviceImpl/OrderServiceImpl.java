@@ -1,6 +1,7 @@
 package com.MicroservicePractice.OrderService.service.serviceImpl;
 
 import com.MicroservicePractice.OrderService.entity.Order;
+import com.MicroservicePractice.OrderService.external.client.ProductService;
 import com.MicroservicePractice.OrderService.model.OrderRequest;
 import com.MicroservicePractice.OrderService.repository.OrderRepository;
 import com.MicroservicePractice.OrderService.service.OrderService;
@@ -17,9 +18,16 @@ public class OrderServiceImpl implements OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
+    @Autowired
+    private ProductService productService;
+
     @Override
     public long placeOrder(OrderRequest orderRequest) {
         log.info("Placing Order Request: " + orderRequest);
+
+        productService.reduceQuantity(orderRequest.getProductId(), orderRequest.getQuantity());
+
+        log.info("Creating Order with Status CREATED");
 
         Order order = Order.builder()
                 .amount(orderRequest.getTotalAmount())
