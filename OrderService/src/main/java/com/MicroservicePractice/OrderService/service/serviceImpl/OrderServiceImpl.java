@@ -1,10 +1,12 @@
 package com.MicroservicePractice.OrderService.service.serviceImpl;
 
 import com.MicroservicePractice.OrderService.entity.Order;
+import com.MicroservicePractice.OrderService.exception.CustomException;
 import com.MicroservicePractice.OrderService.external.client.PaymentService;
 import com.MicroservicePractice.OrderService.external.client.ProductService;
 import com.MicroservicePractice.OrderService.external.request.PaymentRequest;
 import com.MicroservicePractice.OrderService.model.OrderRequest;
+import com.MicroservicePractice.OrderService.model.OrderResponse;
 import com.MicroservicePractice.OrderService.repository.OrderRepository;
 import com.MicroservicePractice.OrderService.service.OrderService;
 import lombok.extern.log4j.Log4j2;
@@ -67,5 +69,24 @@ public class OrderServiceImpl implements OrderService {
 
         log.info("Order Placed successfully with Order Id: {} ", order.getId());
         return order.getId();
+    }
+
+    @Override
+    public OrderResponse getOrderDetails(long orderId) {
+        log.info("Get order details for Order Id: {}", orderId);
+
+        Order order
+                = orderRepository.findById(orderId)
+                .orElseThrow(() -> new CustomException("Order not found for the OrderId: " + orderId, "NOT_FOUND", 404));
+
+        OrderResponse orderResponse
+                = OrderResponse.builder()
+                .orderId(order.getId())
+                .orderStatus(order.getOrderStatus())
+                .amount(order.getAmount())
+                .orderDate(order.getOrderDate())
+                .build();
+
+        return orderResponse;
     }
 }
