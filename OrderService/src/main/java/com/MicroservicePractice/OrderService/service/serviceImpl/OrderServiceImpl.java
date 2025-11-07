@@ -5,13 +5,16 @@ import com.MicroservicePractice.OrderService.exception.CustomException;
 import com.MicroservicePractice.OrderService.external.client.PaymentService;
 import com.MicroservicePractice.OrderService.external.client.ProductService;
 import com.MicroservicePractice.OrderService.external.request.PaymentRequest;
+import com.MicroservicePractice.OrderService.external.response.PaymentResponse;
 import com.MicroservicePractice.OrderService.model.OrderRequest;
 import com.MicroservicePractice.OrderService.model.OrderResponse;
 import com.MicroservicePractice.OrderService.repository.OrderRepository;
 import com.MicroservicePractice.OrderService.service.OrderService;
+import com.MicroservicePractice.ProductService.model.ProductResponse;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.time.Instant;
 
@@ -27,6 +30,9 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private PaymentService paymentService;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Override
     public long placeOrder(OrderRequest orderRequest) {
@@ -79,12 +85,40 @@ public class OrderServiceImpl implements OrderService {
                 = orderRepository.findById(orderId)
                 .orElseThrow(() -> new CustomException("Order not found for the OrderId: " + orderId, "NOT_FOUND", 404));
 
+        log.info("Invoking Product service to deatch the product for orderId: {}", order.getId());
+
+        //calling with restTemplate instead of Feign Client
+        ProductResponse productResponse
+                = restTemplate.getForObject("http://PRODUCT-SERVICE/product/" + order.getProductId(), ProductResponse.class);
+
+        log.info("Getting Payment response for orderId: {} ", order.getId());
+        PaymentResponse paymentResponse
+                = restTemplate.getForObject("http://PAYMENT-SERVICE/payment/order/" + order.getId(), PaymentResponse.class);
+
+        OrderResponse.ProductDetails productDetails
+                = OrderResponse.ProductDetails
+                .builder()
+                .productName(productResponse.getProductName())
+                .productId(productResponse.getProductId())
+                .price(productResponse.getPrice())
+                .build();
+
+        OrderResponse.PaymentDetails paymentDetails
+                = OrderResponse.PaymentDetails.builder()
+                .paymentId(paymentResponse.getPaymentId())
+                .paymentDate(paymentResponse.getPaymentDate())
+                .paymentStatus(paymentResponse.getStatus())
+                .paymentMode(paymentResponse.getPaymentMode())
+                .build();
+
         OrderResponse orderResponse
                 = OrderResponse.builder()
                 .orderId(order.getId())
                 .orderStatus(order.getOrderStatus())
                 .amount(order.getAmount())
                 .orderDate(order.getOrderDate())
+                .productDetails(productDetails)
+                .PaymentDetails(paymentDetails)
                 .build();
 
         return orderResponse;
