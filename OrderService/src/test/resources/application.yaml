@@ -1,15 +1,14 @@
 spring:
-  config:
-    import: "optional: configserver: http://localhost:9296"
   datasource:
-      url: jdbc:h2:mem:order
-      username: sa
-      password: password
-      driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:ORDER_DETAILS;DB_CLOSE_DELAY=-1;MODE=MySQL
+    username: sa
+    password: password
+    driverClassName: org.h2.Driver
   jpa:
     database-platform: org.hibernate.dialect.MySQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: create-drop  # use create or create-drop for tests
+
   security:
     oauth2:
       resourceserver:

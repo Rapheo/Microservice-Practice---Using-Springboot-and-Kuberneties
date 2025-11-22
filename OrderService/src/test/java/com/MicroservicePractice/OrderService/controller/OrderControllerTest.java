@@ -1,11 +1,15 @@
 package com.MicroservicePractice.OrderService.controller;
 
+import com.MicroservicePractice.OrderService.OrderServiceConfig;
+import com.MicroservicePractice.OrderService.entity.Order;
+import com.MicroservicePractice.OrderService.model.OrderRequest;
+import com.MicroservicePractice.OrderService.model.PaymentMode;
 import com.MicroservicePractice.OrderService.repository.OrderRepository;
 import com.MicroservicePractice.OrderService.service.OrderService;
+import com.MicroservicePractice.OrderService.service.serviceImpl.OrderServiceImpl;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,21 +21,26 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.util.StreamUtils;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.util.Optional;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.nio.charset.Charset.*;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.util.StreamUtils.*;
 
 @SpringBootTest({"server.port= 0"})
 @EnableConfigurationProperties
 @AutoConfigureMockMvc
-@ContextConfiguration(classes = {OrderControllerTest.class})
+@ContextConfiguration(classes = {OrderServiceConfig.class})
 public class OrderControllerTest {
 
     @Autowired
@@ -106,10 +115,40 @@ public class OrderControllerTest {
                         ))));
     }
 
+    private OrderRequest getMockOrderRequest() {
+        return OrderRequest.builder()
+                .productId(1)
+                .quantity(10)
+                .paymentMode(PaymentMode.CASH)
+                .totalAmount(200)
+                .build();
+    }
+
     @Test
-    public void test_WhenPlaceOrder_DoPayment_Success(){
+    public void test_WhenPlaceOrder_DoPayment_Success() throws Exception {
         //First Place Order
         //Get Order by Order Id from Db and Check
         //Check output
+
+        OrderRequest orderRequest = getMockOrderRequest();
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/order/placeOrder")
+                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_Customer")))
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(objectMapper.writeValueAsString(orderRequest)))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        String orderId = mvcResult.getResponse().getContentAsString();
+
+        Optional<Order> order = orderRepository.findById(Long.valueOf(orderId));
+        assertTrue(order.isPresent());
+
+        Order o = order.get();
+        assertEquals(Long.parseLong(orderId), o.getId());
+        assertEquals("PLACED", o.getOrderStatus());
+        assertEquals(orderRequest.getTotalAmount(), o.getAmount());
+        assertEquals(orderRequest.getQuantity(), o.getQuantity());
     }
+
+
 }
