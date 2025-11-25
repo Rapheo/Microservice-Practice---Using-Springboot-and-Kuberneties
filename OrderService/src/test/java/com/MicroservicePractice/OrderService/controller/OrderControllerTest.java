@@ -3,10 +3,10 @@ package com.MicroservicePractice.OrderService.controller;
 import com.MicroservicePractice.OrderService.OrderServiceConfig;
 import com.MicroservicePractice.OrderService.entity.Order;
 import com.MicroservicePractice.OrderService.model.OrderRequest;
+import com.MicroservicePractice.OrderService.model.OrderResponse;
 import com.MicroservicePractice.OrderService.model.PaymentMode;
 import com.MicroservicePractice.OrderService.repository.OrderRepository;
 import com.MicroservicePractice.OrderService.service.OrderService;
-import com.MicroservicePractice.OrderService.service.serviceImpl.OrderServiceImpl;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -37,7 +37,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
 import static org.springframework.util.StreamUtils.*;
 
-@SpringBootTest({"server.port= 0"})
+@SpringBootTest({"server.port= 0", "spring.cloud.config.enabled=false"})
 @EnableConfigurationProperties
 @AutoConfigureMockMvc
 @ContextConfiguration(classes = {OrderServiceConfig.class})
@@ -103,7 +103,7 @@ public class OrderControllerTest {
     }
 
     private void getProductDetailsResponse() throws IOException {
-        wireMockServer.stubFor(get("/product/1")
+        wireMockServer.stubFor(get(urlEqualTo("/product/1"))
                 .willReturn(aResponse()
                         .withStatus(HttpStatus.OK.value())
                         .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
@@ -118,7 +118,7 @@ public class OrderControllerTest {
     private OrderRequest getMockOrderRequest() {
         return OrderRequest.builder()
                 .productId(1)
-                .quantity(10)
+                .quantity(370)
                 .paymentMode(PaymentMode.CASH)
                 .totalAmount(200)
                 .build();
@@ -148,6 +148,77 @@ public class OrderControllerTest {
         assertEquals("PLACED", o.getOrderStatus());
         assertEquals(orderRequest.getTotalAmount(), o.getAmount());
         assertEquals(orderRequest.getQuantity(), o.getQuantity());
+    }
+
+    @Test
+    public void test_WhenPlaceOrderWithWrongAccess_thenThrow403() throws Exception {
+        OrderRequest orderRequest = getMockOrderRequest();
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.post("/order/placeOrder")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_Admin")))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE)
+                        .content(objectMapper.writeValueAsString(orderRequest)))
+                .andExpect(MockMvcResultMatchers.status().isForbidden())
+                .andReturn();
+    }
+
+    @Test
+    public void test_WhenGetOrder_Success() throws Exception{
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/order/1")
+                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_Customer")))
+                .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andReturn();
+
+        String actualResponse = mvcResult.getResponse().getContentAsString();
+        Order order = orderRepository.findById(1l).get();
+        String expectedResponse = getOrderResponse(order);
+
+        assertEquals(actualResponse, expectedResponse);
+    }
+
+    private String getOrderResponse(Order order) throws  Exception {
+        OrderResponse.PaymentDetails paymentDetails
+                = objectMapper.readValue(
+                        copyToString(
+                                OrderControllerTest.class.getClassLoader()
+                                        .getResourceAsStream("/mock/GetPayment.json"),
+                                        defaultCharset()
+                        ), OrderResponse.PaymentDetails.class
+        );
+
+        paymentDetails.setPaymentStatus("SUCCESS");
+
+        OrderResponse.ProductDetails productDetails
+                = objectMapper.readValue(
+                        copyToString(
+                                OrderControllerTest.class.getClassLoader()
+                                        .getResourceAsStream("/mock/GetProduct.json"),
+                                defaultCharset()),
+                        OrderResponse.ProductDetails.class
+        );
+
+        OrderResponse orderResponse
+                = OrderResponse.builder()
+                        .orderId(order.getId())
+                        .orderStatus(order.getOrderStatus())
+                        .orderDate(order.getOrderDate())
+                        .paymentDetails(paymentDetails)
+                        .productDetails(productDetails)
+                        .amount(order.getAmount())
+                        .build();
+
+        return objectMapper.writeValueAsString(orderResponse);
+    }
+
+    @Test
+    public void testWhen_GetOrder_Order_Not_Found() throws Exception {
+        MvcResult mvcResult = mockMvc.perform(MockMvcRequestBuilders.get("/order/2")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_Customer")))
+                        .contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(MockMvcResultMatchers.status().isNotFound())
+                .andReturn();
+
+
     }
 
 

@@ -95,6 +95,7 @@ public class OrderServiceImpl implements OrderService {
         PaymentResponse paymentResponse
                 = restTemplate.getForObject("http://PAYMENT-SERVICE/payment/order/" + order.getId(), PaymentResponse.class);
 
+        assert productResponse != null;
         OrderResponse.ProductDetails productDetails
                 = OrderResponse.ProductDetails
                 .builder()
@@ -118,7 +119,7 @@ public class OrderServiceImpl implements OrderService {
                 .amount(order.getAmount())
                 .orderDate(order.getOrderDate())
                 .productDetails(productDetails)
-                .PaymentDetails(paymentDetails)
+                .paymentDetails(paymentDetails)
                 .build();
 
         return orderResponse;

@@ -1,6 +1,5 @@
 package com.MicroservicePractice.OrderService.model;
 
-import com.MicroservicePractice.OrderService.external.response.PaymentResponse;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,7 +17,7 @@ public class OrderResponse {
     private String orderStatus;
     private long amount;
     private ProductDetails productDetails;
-    private PaymentDetails PaymentDetails;
+    private PaymentDetails paymentDetails;
 
     @Data
     @Builder
