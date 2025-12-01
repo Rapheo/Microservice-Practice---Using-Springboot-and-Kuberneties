@@ -6,6 +6,8 @@ spring:
     config:
       enabled: false
 
+#hostname: localhost
+
 eureka:
   instance:
     hostname: localhost
