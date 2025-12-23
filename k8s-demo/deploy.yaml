@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: service-registry
-  template:
+  template: 
     metadata:
       labels:
         app: service-registry
@@ -16,4 +16,4 @@ spec:
         image: practiceMicroservice/serviceregistry:0.0.1
         imagePullPolicy: Always
         ports:
-          - containerPort: 8761
+          - containerPort: 8761  
