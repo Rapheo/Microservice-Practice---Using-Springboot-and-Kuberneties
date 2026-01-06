@@ -13,6 +13,7 @@ import com.MicroservicePractice.OrderService.repository.OrderRepository;
 import com.MicroservicePractice.OrderService.service.OrderService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -33,6 +34,12 @@ public class OrderServiceImpl implements OrderService {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    @Value("${microservices.product}")
+    private String productServiceURL;
+
+    @Value("${microservices.payment}")
+    private String paymentServiceURL;
 
     @Override
     public long placeOrder(OrderRequest orderRequest) {
@@ -89,11 +96,11 @@ public class OrderServiceImpl implements OrderService {
 
         //calling with restTemplate instead of Feign Client
         ProductResponse productResponse
-                = restTemplate.getForObject("http://PRODUCT-SERVICE/product/" + order.getProductId(), ProductResponse.class);
+                = restTemplate.getForObject(productServiceURL + order.getProductId(), ProductResponse.class);
 
         log.info("Getting Payment response for orderId: {} ", order.getId());
         PaymentResponse paymentResponse
-                = restTemplate.getForObject("http://PAYMENT-SERVICE/payment/order/" + order.getId(), PaymentResponse.class);
+                = restTemplate.getForObject(paymentServiceURL + "order/" + order.getId(), PaymentResponse.class);
 
         assert productResponse != null;
         OrderResponse.ProductDetails productDetails

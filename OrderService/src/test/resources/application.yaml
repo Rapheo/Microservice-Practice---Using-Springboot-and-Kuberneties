@@ -16,6 +16,6 @@ spring:
           issuer-uri: https://dev-3ipx01b1.auth0.com/
 
 
-eureka:
-  client:
-    enabled: false
+microservices:
+  product: http://product-service-svc/product/
+  payment: http://payment-service-svc/payment/

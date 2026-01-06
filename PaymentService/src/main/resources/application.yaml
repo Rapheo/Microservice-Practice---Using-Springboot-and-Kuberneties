@@ -7,10 +7,6 @@ management:
   zipkin:
     tracing:
       endpoint: http://zipkin-svc:9411/api/v2/spans
-# eureka:
-#   client:
-#     service-url:
-#       defaultZone: ${EUREKA_SERVER_ADDRESS:http://localhost:8761/eureka/}
 
 spring:
   application:
@@ -36,14 +32,14 @@ spring:
         jwt:
           issuer-uri: https://dev-3ipx01b1.auth0.com/
 
-eureka:
- instance:
-   prefer-ip-address: true
- client:
-   fetch-registry: true
-   register-with-eureka: true
-   service-url:
-     defaultZone: ${EUREKA_SERVER_ADDRESS:http://localhost:8761/eureka/}
+#eureka:
+# instance:
+#   prefer-ip-address: true
+# client:
+#   fetch-registry: true
+#   register-with-eureka: true
+#   service-url:
+#     defaultZone: ${EUREKA_SERVER_ADDRESS:http://localhost:8761/eureka/}
 
 
 server:
