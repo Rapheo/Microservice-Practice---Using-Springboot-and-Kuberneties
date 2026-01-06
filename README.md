@@ -6,6 +6,15 @@ It implements a **workable backend for a small e-commerce platform** consisting 
 
 ---
 
+### Purpose of This Project
+- **Demonstrate real-world microservice architecture**
+- **Practice Kubernetes orchestration**
+- **Apply resilience patterns (circuit breaker, rate limiting)**
+- **Implement distributed tracing and secure service communication**
+- **Showcase production-ready Spring Boot practices**
+
+---
+
 ## Architecture Overview
 
 The system is built using **Spring Boot microservices**, orchestrated with **Kubernetes**, and containerized using **Docker**.
@@ -25,7 +34,7 @@ The system is built using **Spring Boot microservices**, orchestrated with **Kub
 
 ---
 
-## 🛒 E-Commerce Features
+## E-Commerce Features
 - Order creation and management
 - Product catalog handling
 - Payment processing
@@ -34,7 +43,7 @@ The system is built using **Spring Boot microservices**, orchestrated with **Kub
 
 ---
 
-## 🗄 Database
+## Database
 - **MySQL** is used as the main relational database.
 - Deployed in Kubernetes as a **StatefulSet** to ensure:
   - Stable network identity
@@ -122,10 +131,3 @@ rapheo.abdullah20@gmail.com
 
 I will provide you access to my Docker Hub repository so you can pull the images and run the project locally.
 
-
-### Purpose of This Project
-- **Demonstrate real-world microservice architecture**
-- **Practice Kubernetes orchestration**
-- **Apply resilience patterns (circuit breaker, rate limiting)**
-- **Implement distributed tracing and secure service communication**
-- **Showcase production-ready Spring Boot practices**
